@@ -39,3 +39,5 @@ doc/api/
 .packages
 .pub-cache/
 .pub/
+
+.vscode/

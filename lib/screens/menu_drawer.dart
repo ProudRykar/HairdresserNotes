@@ -4,13 +4,15 @@ import 'calendar_screen.dart';
 import 'clients_screen.dart';
 
 class MenuDrawer extends StatelessWidget {
+  const MenuDrawer({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          DrawerHeader(
+          const DrawerHeader(
             decoration: BoxDecoration(color: Colors.pink),
             child: Text(
               'Меню',
@@ -18,27 +20,27 @@ class MenuDrawer extends StatelessWidget {
             ),
           ),
           ListTile(
-            leading: Icon(Icons.today),
-            title: Text('Сегодня'),
+            leading: const Icon(Icons.today),
+            title: const Text('Сегодня'),
             onTap: () {
               Navigator.pushReplacement(
-                  context, MaterialPageRoute(builder: (context) => MainScreen()));
+                  context, MaterialPageRoute(builder: (context) => const MainScreen()));
             },
           ),
           ListTile(
-            leading: Icon(Icons.calendar_today),
-            title: Text('Календарь'),
+            leading: const Icon(Icons.calendar_today),
+            title: const Text('Календарь'),
             onTap: () {
               Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => CalendarScreen()));
+                  MaterialPageRoute(builder: (context) => const CalendarScreen()));
             },
           ),
           ListTile(
-            leading: Icon(Icons.people),
-            title: Text('Клиенты'),
+            leading: const Icon(Icons.people),
+            title: const Text('Клиенты'),
             onTap: () {
               Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => ClientsScreen()));
+                  MaterialPageRoute(builder: (context) => const ClientsScreen()));
             },
           ),
         ],

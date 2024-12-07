@@ -3,8 +3,10 @@ import 'package:table_calendar/table_calendar.dart';
 import 'menu_drawer.dart';
 
 class CalendarScreen extends StatefulWidget {
+  const CalendarScreen({super.key});
+
   @override
-  _CalendarScreenState createState() => _CalendarScreenState();
+  State<CalendarScreen> createState() => _CalendarScreenState();
 }
 
 class _CalendarScreenState extends State<CalendarScreen> {
@@ -14,9 +16,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Календарь'),
+        title: const Text('Календарь'),
       ),
-      drawer: MenuDrawer(),
+      drawer: const MenuDrawer(),
       body: Column(
         children: [
           TableCalendar(

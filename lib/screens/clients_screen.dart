@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'menu_drawer.dart';
 
 class ClientsScreen extends StatefulWidget {
+  const ClientsScreen({super.key});
+
   @override
-  _ClientsScreenState createState() => _ClientsScreenState();
+  State<ClientsScreen> createState() => _ClientsScreenState();
 }
 
 class _ClientsScreenState extends State<ClientsScreen> {
@@ -19,11 +21,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Клиенты'),
+        title: const Text('Клиенты'),
       ),
-      drawer: MenuDrawer(),
+      drawer: const MenuDrawer(),
       body: clients.isEmpty
-          ? Center(child: Text('Нет клиентов'))
+          ? const Center(child: Text('Нет клиентов'))
           : ListView.builder(
               itemCount: clients.length,
               itemBuilder: (context, index) {
@@ -39,31 +41,31 @@ class _ClientsScreenState extends State<ClientsScreen> {
             builder: (context) {
               TextEditingController controller = TextEditingController();
               return AlertDialog(
-                title: Text('Новый клиент'),
+                title: const Text('Новый клиент'),
                 content: TextField(
                   controller: controller,
-                  decoration: InputDecoration(hintText: 'Введите ФИО клиента'),
+                  decoration: const InputDecoration(hintText: 'Введите ФИО клиента'),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text('Отмена'),
+                    child: const Text('Отмена'),
                   ),
                   TextButton(
                     onPressed: () {
                       addClient(controller.text);
                       Navigator.pop(context);
                     },
-                    child: Text('Добавить'),
+                    child: const Text('Добавить'),
                   ),
                 ],
               );
             },
           );
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }

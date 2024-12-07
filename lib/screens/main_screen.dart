@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'menu_drawer.dart';
 
 class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
   @override
-  _MainScreenState createState() => _MainScreenState();
+  State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
@@ -31,11 +33,11 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Записи на сегодня'),
+        title: const Text('Записи на сегодня'),
       ),
-      drawer: MenuDrawer(),
+      drawer: const MenuDrawer(),
       body: todayAppointments.isEmpty
-          ? Center(child: Text('Нет записей на сегодня'))
+          ? const Center(child: Text('Нет записей на сегодня'))
           : ListView.builder(
               itemCount: todayAppointments.length,
               itemBuilder: (context, index) {
@@ -51,31 +53,31 @@ class _MainScreenState extends State<MainScreen> {
             builder: (context) {
               TextEditingController controller = TextEditingController();
               return AlertDialog(
-                title: Text('Новая запись'),
+                title: const Text('Новая запись'),
                 content: TextField(
                   controller: controller,
-                  decoration: InputDecoration(hintText: 'Введите запись'),
+                  decoration: const InputDecoration(hintText: 'Введите запись'),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text('Отмена'),
+                    child: const Text('Отмена'),
                   ),
                   TextButton(
                     onPressed: () {
                       addAppointment(controller.text);
                       Navigator.pop(context);
                     },
-                    child: Text('Добавить'),
+                    child: const Text('Добавить'),
                   ),
                 ],
               );
             },
           );
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
