@@ -1,5 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'menu_drawer.dart';
+import 'appointment.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -9,73 +17,401 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  List<String> todayAppointments = [];
+  List<Appointment> appointments = [];
+  DateTime? selectedDate;
+  TimeOfDay? selectedTime;
+  DateTime focusedDate = DateTime.now();
+  DateTime? calendarSelectedDate;
 
   @override
   void initState() {
     super.initState();
-    loadAppointmentsForToday();
-  }
-
-  Future<void> loadAppointmentsForToday() async {
-    setState(() {
-      todayAppointments = ['Пример записи 1', 'Пример записи 2'];
+    calendarSelectedDate = DateTime.now();
+    initializeDateFormatting('ru', null).then((_) {
+      loadAppointments();
     });
   }
 
-  Future<void> addAppointment(String appointment) async {
+  Future<String> get _localPath async {
+    final directory = await getApplicationDocumentsDirectory();
+    return directory.path;
+  }
+
+  Future<File> get _localFile async {
+    final path = await _localPath;
+    return File('$path/appointments.json');
+  }
+
+  Future<void> loadAppointments() async {
+    try {
+      final file = await _localFile;
+      if (await file.exists()) {
+        final contents = await file.readAsString();
+        final List<dynamic> jsonData = jsonDecode(contents);
+        setState(() {
+          appointments = jsonData.map((e) => Appointment.fromJson(e as Map<String, dynamic>)).toList();
+        });
+      } else {
+        setState(() {
+          appointments = [];
+        });
+      }
+    } catch (e) {
+      print('Error loading appointments: $e');
+      setState(() {
+        appointments = [];
+      });
+    }
+  }
+
+  Future<void> saveAppointments() async {
+    try {
+      final file = await _localFile;
+      await file.writeAsString(jsonEncode(appointments.map((e) => e.toJson()).toList()));
+    } catch (e) {
+      print('Error saving appointments: $e');
+    }
+  }
+
+  Future<void> addAppointment(Appointment appointment) async {
     setState(() {
-      todayAppointments.add(appointment);
+      appointments.add(appointment);
     });
+    await saveAppointments();
+  }
+
+  Future<void> updateAppointment(int index, Appointment updatedAppointment) async {
+    setState(() {
+      appointments[index] = updatedAppointment;
+    });
+    await saveAppointments();
+  }
+
+  Future<void> deleteAppointment(int index) async {
+    setState(() {
+      appointments.removeAt(index);
+    });
+    await saveAppointments();
+  }
+
+  List<Appointment> getAppointmentsForDay(DateTime day) {
+    var dayAppointments = appointments.where((appointment) {
+      return appointment.dateTime.year == day.year &&
+             appointment.dateTime.month == day.month &&
+             appointment.dateTime.day == day.day;
+    }).toList();
+    dayAppointments.sort((a, b) => a.dateTime.compareTo(b.dateTime));
+    return dayAppointments;
+  }
+
+  DateTime roundTimeToNearestInterval(DateTime time, int minuteInterval) {
+    final minutes = time.minute;
+    final roundedMinutes = (minutes / minuteInterval).round() * minuteInterval;
+    return DateTime(
+      time.year,
+      time.month,
+      time.day,
+      time.hour,
+      roundedMinutes,
+    );
+  }
+
+  String formatSelectedDate(DateTime? date) {
+    if (date == null) return '';
+    final now = DateTime.now();
+    if (date.year == now.year && date.month == now.month && date.day == now.day) {
+      return 'Сегодня';
+    }
+    return DateFormat('d MMMM y', 'ru').format(date);
+  }
+
+  void _showEarningsDialog(BuildContext context, Appointment appointment, int index) {
+    TextEditingController earningsController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Добавить заработок'),
+          content: TextField(
+            controller: earningsController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              hintText: 'Введите сумму (₽)',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Отмена'),
+            ),
+            TextButton(
+              onPressed: () {
+                final input = earningsController.text.replaceAll(',', '.');
+                final earnings = double.tryParse(input) ?? 0.0;
+                if (earnings >= 0) {
+                  final updatedAppointment = Appointment(
+                    name: appointment.name,
+                    service: appointment.service,
+                    dateTime: appointment.dateTime,
+                    earnings: earnings,
+                  );
+                  updateAppointment(index, updatedAppointment);
+                  Navigator.pop(context);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Введите корректную сумму')),
+                  );
+                }
+              },
+              child: const Text('Сохранить'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showAppointmentDialog(BuildContext context, {Appointment? appointment, int? index}) {
+    TextEditingController nameController = TextEditingController(text: appointment?.name ?? '');
+    TextEditingController serviceController = TextEditingController(text: appointment?.service ?? '');
+    selectedDate = appointment?.dateTime ?? selectedDate;
+    selectedTime = appointment != null ? TimeOfDay.fromDateTime(appointment.dateTime) : selectedTime;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text(appointment == null ? 'Новая запись' : 'Редактировать запись'),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: nameController,
+                        decoration: const InputDecoration(hintText: 'Введите имя'),
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: serviceController,
+                        decoration: const InputDecoration(hintText: 'Введите услугу'),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        height: 270,
+                        child: CalendarDatePicker(
+                          initialDate: selectedDate ?? DateTime.now(),
+                          firstDate: DateTime(2025),
+                          lastDate: DateTime(2100),
+                          onDateChanged: (DateTime value) {
+                            setDialogState(() {
+                              selectedDate = value;
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        height: 100,
+                        child: CupertinoDatePicker(
+                          mode: CupertinoDatePickerMode.time,
+                          initialDateTime: roundTimeToNearestInterval(
+                              appointment?.dateTime ?? DateTime.now(), 10),
+                          use24hFormat: true,
+                          minuteInterval: 10,
+                          onDateTimeChanged: (DateTime value) {
+                            setDialogState(() {
+                              selectedTime = TimeOfDay.fromDateTime(value);
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                SizedBox(
+                  width: double.infinity,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      if (appointment != null)
+                        TextButton(
+                          onPressed: () {
+                            deleteAppointment(index!);
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Удалить', style: TextStyle(color: Colors.red)),
+                        )
+                      else
+                        const SizedBox(width: 8), // чтобы выровнять, если кнопки нет
+
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: const Text('Отмена'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              if (nameController.text.isNotEmpty &&
+                                  serviceController.text.isNotEmpty &&
+                                  selectedDate != null &&
+                                  selectedTime != null) {
+                                final newDateTime = DateTime(
+                                  selectedDate!.year,
+                                  selectedDate!.month,
+                                  selectedDate!.day,
+                                  selectedTime!.hour,
+                                  selectedTime!.minute,
+                                );
+                                final newAppointment = Appointment(
+                                  name: nameController.text,
+                                  service: serviceController.text,
+                                  dateTime: newDateTime,
+                                  earnings: appointment?.earnings ?? 0.0,
+                                );
+                                if (appointment == null) {
+                                  addAppointment(newAppointment);
+                                } else {
+                                  updateAppointment(index!, newAppointment);
+                                }
+                                setDialogState(() {
+                                  selectedDate = null;
+                                  selectedTime = null;
+                                });
+                                Navigator.pop(context);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Заполните все поля')),
+                                );
+                              }
+                            },
+                            child: Text(appointment == null ? 'Добавить' : 'Сохранить'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Записи на сегодня'),
+        title: const Text('Записи'),
+        backgroundColor: const Color.fromARGB(176, 94, 94, 253),
       ),
-      drawer: const MenuDrawer(),
-      body: todayAppointments.isEmpty
-          ? const Center(child: Text('Нет записей на сегодня'))
-          : ListView.builder(
-              itemCount: todayAppointments.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(todayAppointments[index]),
-                );
-              },
+      drawer: MenuDrawer(appointments: appointments),
+      body: Column(
+        children: [
+          TableCalendar(
+            locale: 'ru_RU',
+            firstDay: DateTime(2025),
+            lastDay: DateTime(2100),
+            focusedDay: focusedDate,
+            selectedDayPredicate: (day) => isSameDay(calendarSelectedDate, day),
+            onDaySelected: (selectedDay, focusedDay) {
+              setState(() {
+                calendarSelectedDate = selectedDay;
+                focusedDate = focusedDay;
+              });
+            },
+            eventLoader: getAppointmentsForDay,
+            calendarStyle: const CalendarStyle(
+              markersAlignment: Alignment.bottomRight,
+              markerDecoration: BoxDecoration(
+                color: Colors.blue,
+                shape: BoxShape.circle,
+              ),
             ),
+            headerStyle: const HeaderStyle(
+              formatButtonVisible: false,
+              titleCentered: true,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              formatSelectedDate(calendarSelectedDate),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const Divider(),
+          Expanded(
+            child: calendarSelectedDate == null
+                ? const Center(child: Text('Выберите дату в календаре'))
+                : getAppointmentsForDay(calendarSelectedDate!).isEmpty
+                    ? const Center(child: Text('Нет записей на этот день'))
+                    : ListView.builder(
+                        itemCount: getAppointmentsForDay(calendarSelectedDate!).length,
+                        itemBuilder: (context, index) {
+                          final appointment = getAppointmentsForDay(calendarSelectedDate!)[index];
+                          final time = '${appointment.dateTime.hour}:${appointment.dateTime.minute.toString().padLeft(2, '0')}';
+                          return Card(
+                            margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        showAppointmentDialog(context,
+                                            appointment: appointment,
+                                            index: appointments.indexOf(appointment));
+                                      },
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '$time - ${appointment.name} - ${appointment.service}',
+                                            style: const TextStyle(fontWeight: FontWeight.bold),
+                                          ),
+                                          if (appointment.earnings > 0)
+                                            Text(
+                                              'Заработано: ${appointment.earnings.toStringAsFixed(2)} ₽',
+                                              style: const TextStyle(color: Colors.green),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.add_circle, color: Colors.blue),
+                                    onPressed: () {
+                                      _showEarningsDialog(context, appointment, appointments.indexOf(appointment));
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) {
-              TextEditingController controller = TextEditingController();
-              return AlertDialog(
-                title: const Text('Новая запись'),
-                content: TextField(
-                  controller: controller,
-                  decoration: const InputDecoration(hintText: 'Введите запись'),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Отмена'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      addAppointment(controller.text);
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Добавить'),
-                  ),
-                ],
-              );
-            },
-          );
+          showAppointmentDialog(context);
         },
         child: const Icon(Icons.add),
       ),
