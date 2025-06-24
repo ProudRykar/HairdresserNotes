@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'main_screen.dart';
 import 'recipes_screen.dart';
-import '../main.dart'; // для доступа к themeNotifier
-import 'appointment.dart'; // Импорт модели Appointment
+import '../main.dart';
+import 'appointment.dart';
 
 class MenuDrawer extends StatefulWidget {
   final List<Appointment> appointments;
@@ -21,18 +21,15 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    // Инициализация AnimationController
     _controller = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
 
-    // Анимация прозрачности
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
 
-    // Анимация смещения (слева направо)
     _slideAnimation = Tween<Offset>(
       begin: const Offset(-0.5, 0.0),
       end: Offset.zero,
@@ -40,7 +37,6 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
 
-    // Запуск анимации при открытии Drawer
     _controller.forward();
   }
 
@@ -50,7 +46,6 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
     super.dispose();
   }
 
-  // Функция для подсчёта статистики за сегодня
   Map<String, dynamic> _calculateTodayStats(List<Appointment> appointments) {
     final today = DateTime.now();
     final todayAppointments = appointments.where((appointment) {
@@ -84,7 +79,6 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
             ),
             child: Stack(
               children: [
-                // Текст "Меню" и статистика
                 const Positioned(
                   top: 0,
                   left: 0,
@@ -136,7 +130,6 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
                     },
                   ),
                 ),
-                // Кнопка переключения темы
                 Positioned(
                   top: 0,
                   right: 0,
@@ -156,7 +149,6 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
               ],
             ),
           ),
-          // Анимированные ListTile
           AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {

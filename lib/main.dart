@@ -25,7 +25,7 @@ final ThemeData lightTheme = ThemeData(
   primarySwatch: Colors.pink,
   colorScheme: ColorScheme.fromSwatch().copyWith(
     secondary: Colors.pinkAccent,
-    tertiary: const Color.fromARGB(255, 87, 238, 41), // 💚 зелёный для суммы в тёмной теме
+    tertiary: const Color.fromARGB(255, 87, 238, 41),
   ),
   scaffoldBackgroundColor: Colors.white,
   appBarTheme: const AppBarTheme(
@@ -45,7 +45,7 @@ final ThemeData darkTheme = ThemeData(
   scaffoldBackgroundColor: const Color.fromARGB(255, 44, 44, 44),
   colorScheme: const ColorScheme.dark(
     secondary: Colors.tealAccent,
-    tertiary: Colors.green, // 💚 зелёный для суммы в светлой теме
+    tertiary: Colors.green,
   ),
   primaryColor: Colors.tealAccent,
   appBarTheme: const AppBarTheme(
@@ -71,9 +71,9 @@ class _HairdresserAppState extends State<HairdresserApp> {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Hairdresser Notebook',
-          theme: lightTheme,      // 💡 светлая тема
-          darkTheme: darkTheme,   // 🌑 тёмная тема
-          themeMode: currentTheme, // 👈 переключение темы
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: currentTheme,
           locale: const Locale('ru', 'RU'),
           supportedLocales: const [
             Locale('ru', 'RU'),

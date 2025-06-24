@@ -18,6 +18,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   List<Appointment> appointments = [];
+  List<DateTime> holidays = [];
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   DateTime focusedDate = DateTime.now();
@@ -29,6 +30,7 @@ class _MainScreenState extends State<MainScreen> {
     calendarSelectedDate = DateTime.now();
     initializeDateFormatting('ru', null).then((_) {
       loadAppointments();
+      loadHolidays();
     });
   }
 
@@ -40,6 +42,11 @@ class _MainScreenState extends State<MainScreen> {
   Future<File> get _localFile async {
     final path = await _localPath;
     return File('$path/appointments.json');
+  }
+
+  Future<File> get _holidaysFile async {
+    final path = await _localPath;
+    return File('$path/holidays.json');
   }
 
   Future<void> loadAppointments() async {
@@ -64,12 +71,43 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
+  Future<void> loadHolidays() async {
+    try {
+      final file = await _holidaysFile;
+      if (await file.exists()) {
+        final contents = await file.readAsString();
+        final List<dynamic> jsonData = jsonDecode(contents);
+        setState(() {
+          holidays = jsonData.map((e) => DateTime.parse(e as String)).toList();
+        });
+      } else {
+        setState(() {
+          holidays = [];
+        });
+      }
+    } catch (e) {
+      print('Error loading holidays: $e');
+      setState(() {
+        holidays = [];
+      });
+    }
+  }
+
   Future<void> saveAppointments() async {
     try {
       final file = await _localFile;
       await file.writeAsString(jsonEncode(appointments.map((e) => e.toJson()).toList()));
     } catch (e) {
       print('Error saving appointments: $e');
+    }
+  }
+
+  Future<void> saveHolidays() async {
+    try {
+      final file = await _holidaysFile;
+      await file.writeAsString(jsonEncode(holidays.map((e) => e.toIso8601String()).toList()));
+    } catch (e) {
+      print('Error saving holidays: $e');
     }
   }
 
@@ -92,6 +130,18 @@ class _MainScreenState extends State<MainScreen> {
       appointments.removeAt(index);
     });
     await saveAppointments();
+  }
+
+  Future<void> toggleHoliday(DateTime day) async {
+    final normalizedDay = DateTime(day.year, day.month, day.day);
+    setState(() {
+      if (holidays.any((h) => h.year == normalizedDay.year && h.month == normalizedDay.month && h.day == normalizedDay.day)) {
+        holidays.removeWhere((h) => h.year == normalizedDay.year && h.month == normalizedDay.month && h.day == normalizedDay.day);
+      } else {
+        holidays.add(normalizedDay);
+      }
+    });
+    await saveHolidays();
   }
 
   List<Appointment> getAppointmentsForDay(DateTime day) {
@@ -252,8 +302,7 @@ class _MainScreenState extends State<MainScreen> {
                           child: const Text('Удалить', style: TextStyle(color: Colors.red)),
                         )
                       else
-                        const SizedBox(width: 8), // чтобы выровнять, если кнопки нет
-
+                        const SizedBox(width: 8),
                       Row(
                         children: [
                           TextButton(
@@ -268,6 +317,20 @@ class _MainScreenState extends State<MainScreen> {
                                   serviceController.text.isNotEmpty &&
                                   selectedDate != null &&
                                   selectedTime != null) {
+                                final normalizedSelectedDate = DateTime(
+                                  selectedDate!.year,
+                                  selectedDate!.month,
+                                  selectedDate!.day,
+                                );
+                                if (holidays.any((h) =>
+                                    h.year == normalizedSelectedDate.year &&
+                                    h.month == normalizedSelectedDate.month &&
+                                    h.day == normalizedSelectedDate.day)) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Нельзя создавать записи на выходной день')),
+                                  );
+                                  return;
+                                }
                                 final newDateTime = DateTime(
                                   selectedDate!.year,
                                   selectedDate!.month,
@@ -334,7 +397,36 @@ class _MainScreenState extends State<MainScreen> {
                 focusedDate = focusedDay;
               });
             },
+            onDayLongPressed: (selectedDay, focusedDay) {
+              toggleHoliday(selectedDay);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(holidays.any((h) => h.year == selectedDay.year && h.month == selectedDay.month && h.day == selectedDay.day)
+                      ? 'День отмечен как выходной'
+                      : 'Выходной снят'),
+                ),
+              );
+            },
             eventLoader: getAppointmentsForDay,
+            calendarBuilders: CalendarBuilders(
+              defaultBuilder: (context, day, focusedDay) {
+                if (holidays.any((h) => h.year == day.year && h.month == day.month && h.day == day.day)) {
+                  return Container(
+                    margin: const EdgeInsets.all(4.0),
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      day.day.toString(),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  );
+                }
+                return null;
+              },
+            ),
             calendarStyle: const CalendarStyle(
               markersAlignment: Alignment.bottomRight,
               markerDecoration: BoxDecoration(
@@ -358,54 +450,60 @@ class _MainScreenState extends State<MainScreen> {
           Expanded(
             child: calendarSelectedDate == null
                 ? const Center(child: Text('Выберите дату в календаре'))
-                : getAppointmentsForDay(calendarSelectedDate!).isEmpty
-                    ? const Center(child: Text('Нет записей на этот день'))
-                    : ListView.builder(
-                        itemCount: getAppointmentsForDay(calendarSelectedDate!).length,
-                        itemBuilder: (context, index) {
-                          final appointment = getAppointmentsForDay(calendarSelectedDate!)[index];
-                          final time = '${appointment.dateTime.hour}:${appointment.dateTime.minute.toString().padLeft(2, '0')}';
-                          return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        showAppointmentDialog(context,
-                                            appointment: appointment,
-                                            index: appointments.indexOf(appointment));
-                                      },
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            '$time - ${appointment.name} - ${appointment.service}',
-                                            style: const TextStyle(fontWeight: FontWeight.bold),
+                : holidays.any((h) =>
+                        h.year == calendarSelectedDate!.year &&
+                        h.month == calendarSelectedDate!.month &&
+                        h.day == calendarSelectedDate!.day)
+                    ? const Center(child: Text('Выходной день'))
+                    : getAppointmentsForDay(calendarSelectedDate!).isEmpty
+                        ? const Center(child: Text('Нет записей на этот день'))
+                        : ListView.builder(
+                            padding: const EdgeInsets.only(bottom: 75.0),
+                            itemCount: getAppointmentsForDay(calendarSelectedDate!).length,
+                            itemBuilder: (context, index) {
+                              final appointment = getAppointmentsForDay(calendarSelectedDate!)[index];
+                              final time = '${appointment.dateTime.hour}:${appointment.dateTime.minute.toString().padLeft(2, '0')}';
+                              return Card(
+                                margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            showAppointmentDialog(context,
+                                                appointment: appointment,
+                                                index: appointments.indexOf(appointment));
+                                          },
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                '$time - ${appointment.name} - ${appointment.service}',
+                                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                              ),
+                                              if (appointment.earnings > 0)
+                                                Text(
+                                                  'Заработано: ${appointment.earnings.toStringAsFixed(2)} ₽',
+                                                  style: const TextStyle(color: Colors.green),
+                                                ),
+                                            ],
                                           ),
-                                          if (appointment.earnings > 0)
-                                            Text(
-                                              'Заработано: ${appointment.earnings.toStringAsFixed(2)} ₽',
-                                              style: const TextStyle(color: Colors.green),
-                                            ),
-                                        ],
+                                        ),
                                       ),
-                                    ),
+                                      IconButton(
+                                        icon: const Icon(Icons.add_circle, color: Colors.blue),
+                                        onPressed: () {
+                                          _showEarningsDialog(context, appointment, appointments.indexOf(appointment));
+                                        },
+                                      ),
+                                    ],
                                   ),
-                                  IconButton(
-                                    icon: const Icon(Icons.add_circle, color: Colors.blue),
-                                    onPressed: () {
-                                      _showEarningsDialog(context, appointment, appointments.indexOf(appointment));
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                                ),
+                              );
+                            },
+                          ),
           ),
         ],
       ),
