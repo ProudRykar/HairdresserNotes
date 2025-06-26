@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:stylist_notebook/screens/clients_screen.dart';
+import 'package:stylist_notebook/screens/statistics_screen.dart';
 import 'main_screen.dart';
 import 'recipes_screen.dart';
 import '../main.dart';
@@ -115,7 +117,7 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
                                   style: TextStyle(color: Colors.white, fontSize: 16),
                                 ),
                                 TextSpan(
-                                  text: '${stats['totalEarnings'].toStringAsFixed(2)} ₽',
+                                  text: '${stats['totalEarnings'].toStringAsFixed(0)} ₽',
                                   style: TextStyle(
                                     color: moneyColor,
                                     fontSize: 16,
@@ -184,6 +186,48 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(builder: (context) => const RecipesScreen()),
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: _slideAnimation.value,
+                child: Opacity(
+                  opacity: _fadeAnimation.value,
+                  child: ListTile(
+                    leading: const Icon(Icons.people),
+                    title: const Text('Клиенты'),
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ClientsScreen()),
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: _slideAnimation.value,
+                child: Opacity(
+                  opacity: _fadeAnimation.value,
+                  child: ListTile(
+                    leading: const Icon(Icons.bar_chart),
+                    title: const Text('Статистика'),
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const StatisticsScreen()),
                       );
                     },
                   ),

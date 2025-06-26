@@ -134,11 +134,26 @@ class _MainScreenState extends State<MainScreen> {
 
   Future<void> toggleHoliday(DateTime day) async {
     final normalizedDay = DateTime(day.year, day.month, day.day);
+    final hasAppointments = getAppointmentsForDay(normalizedDay).isNotEmpty;
+
+    if (hasAppointments && !holidays.any((h) => h.year == normalizedDay.year && h.month == normalizedDay.month && h.day == normalizedDay.day)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Нельзя отмечать как выходной день с записями')),
+      );
+      return;
+    }
+
     setState(() {
       if (holidays.any((h) => h.year == normalizedDay.year && h.month == normalizedDay.month && h.day == normalizedDay.day)) {
         holidays.removeWhere((h) => h.year == normalizedDay.year && h.month == normalizedDay.month && h.day == normalizedDay.day);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Выходной снят')),
+        );
       } else {
         holidays.add(normalizedDay);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('День отмечен как выходной')),
+        );
       }
     });
     await saveHolidays();
@@ -391,6 +406,7 @@ class _MainScreenState extends State<MainScreen> {
             lastDay: DateTime(2100),
             focusedDay: focusedDate,
             selectedDayPredicate: (day) => isSameDay(calendarSelectedDate, day),
+            startingDayOfWeek: StartingDayOfWeek.monday, // Week starts from Monday
             onDaySelected: (selectedDay, focusedDay) {
               setState(() {
                 calendarSelectedDate = selectedDay;
@@ -399,13 +415,6 @@ class _MainScreenState extends State<MainScreen> {
             },
             onDayLongPressed: (selectedDay, focusedDay) {
               toggleHoliday(selectedDay);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(holidays.any((h) => h.year == selectedDay.year && h.month == selectedDay.month && h.day == selectedDay.day)
-                      ? 'День отмечен как выходной'
-                      : 'Выходной снят'),
-                ),
-              );
             },
             eventLoader: getAppointmentsForDay,
             calendarBuilders: CalendarBuilders(
@@ -485,7 +494,7 @@ class _MainScreenState extends State<MainScreen> {
                                               ),
                                               if (appointment.earnings > 0)
                                                 Text(
-                                                  'Заработано: ${appointment.earnings.toStringAsFixed(2)} ₽',
+                                                  'Заработано: ${appointment.earnings.toStringAsFixed(0)} ₽',
                                                   style: const TextStyle(color: Colors.green),
                                                 ),
                                             ],
@@ -507,12 +516,18 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showAppointmentDialog(context);
-        },
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: calendarSelectedDate != null &&
+              !holidays.any((h) =>
+                  h.year == calendarSelectedDate!.year &&
+                  h.month == calendarSelectedDate!.month &&
+                  h.day == calendarSelectedDate!.day)
+          ? FloatingActionButton(
+              onPressed: () {
+                showAppointmentDialog(context);
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 }
