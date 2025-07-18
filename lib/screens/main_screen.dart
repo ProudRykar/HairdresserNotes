@@ -64,7 +64,7 @@ class _MainScreenState extends State<MainScreen> {
         });
       }
     } catch (e) {
-      print('Error loading appointments: $e');
+      debugPrint('Error loading appointments: $e');
       setState(() {
         appointments = [];
       });
@@ -86,7 +86,7 @@ class _MainScreenState extends State<MainScreen> {
         });
       }
     } catch (e) {
-      print('Error loading holidays: $e');
+      debugPrint('Error loading holidays: $e');
       setState(() {
         holidays = [];
       });
@@ -98,7 +98,7 @@ class _MainScreenState extends State<MainScreen> {
       final file = await _localFile;
       await file.writeAsString(jsonEncode(appointments.map((e) => e.toJson()).toList()));
     } catch (e) {
-      print('Error saving appointments: $e');
+      debugPrint('Error saving appointments: $e');
     }
   }
 
@@ -107,7 +107,7 @@ class _MainScreenState extends State<MainScreen> {
       final file = await _holidaysFile;
       await file.writeAsString(jsonEncode(holidays.map((e) => e.toIso8601String()).toList()));
     } catch (e) {
-      print('Error saving holidays: $e');
+      debugPrint('Error saving holidays: $e');
     }
   }
 
@@ -239,11 +239,14 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  void showAppointmentDialog(BuildContext context, {Appointment? appointment, int? index}) {
+  void showAppointmentDialog(BuildContext context, {Appointment? appointment, int? index, DateTime? selectedDay}) {
     TextEditingController nameController = TextEditingController(text: appointment?.name ?? '');
     TextEditingController serviceController = TextEditingController(text: appointment?.service ?? '');
-    selectedDate = appointment?.dateTime ?? selectedDate;
-    selectedTime = appointment != null ? TimeOfDay.fromDateTime(appointment.dateTime) : selectedTime;
+
+    setState(() {
+      selectedDate = selectedDay ?? appointment?.dateTime ?? DateTime.now();
+    });
+    selectedTime = appointment != null ? TimeOfDay.fromDateTime(appointment.dateTime) : TimeOfDay.now();
 
     showDialog(
       context: context,
@@ -270,16 +273,41 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                       const SizedBox(height: 20),
                       SizedBox(
-                        height: 270,
-                        child: CalendarDatePicker(
-                          initialDate: selectedDate ?? DateTime.now(),
-                          firstDate: DateTime(2025),
-                          lastDate: DateTime(2100),
-                          onDateChanged: (DateTime value) {
+                        height: 400,
+                        child: TableCalendar(
+                          locale: 'ru_RU',
+                          firstDay: DateTime(2025),
+                          lastDay: DateTime(2100),
+                          focusedDay: selectedDate!,
+                          currentDay: selectedDate,
+                          selectedDayPredicate: (day) => isSameDay(selectedDate, day),
+                          onDaySelected: (selectedDay, focusedDay) {
                             setDialogState(() {
-                              selectedDate = value;
+                              selectedDate = selectedDay;
                             });
                           },
+                          calendarBuilders: CalendarBuilders(
+                            defaultBuilder: (context, day, focusedDay) {
+                              if (holidays.any((h) =>
+                                  h.year == day.year &&
+                                  h.month == day.month &&
+                                  h.day == day.day)) {
+                                return Container(
+                                  margin: const EdgeInsets.all(4.0),
+                                  alignment: Alignment.center,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    day.day.toString(),
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                );
+                              }
+                              return null;
+                            },
+                          ),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -332,20 +360,6 @@ class _MainScreenState extends State<MainScreen> {
                                   serviceController.text.isNotEmpty &&
                                   selectedDate != null &&
                                   selectedTime != null) {
-                                final normalizedSelectedDate = DateTime(
-                                  selectedDate!.year,
-                                  selectedDate!.month,
-                                  selectedDate!.day,
-                                );
-                                if (holidays.any((h) =>
-                                    h.year == normalizedSelectedDate.year &&
-                                    h.month == normalizedSelectedDate.month &&
-                                    h.day == normalizedSelectedDate.day)) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Нельзя создавать записи на выходной день')),
-                                  );
-                                  return;
-                                }
                                 final newDateTime = DateTime(
                                   selectedDate!.year,
                                   selectedDate!.month,
@@ -364,10 +378,6 @@ class _MainScreenState extends State<MainScreen> {
                                 } else {
                                   updateAppointment(index!, newAppointment);
                                 }
-                                setDialogState(() {
-                                  selectedDate = null;
-                                  selectedTime = null;
-                                });
                                 Navigator.pop(context);
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -523,7 +533,7 @@ class _MainScreenState extends State<MainScreen> {
                   h.day == calendarSelectedDate!.day)
           ? FloatingActionButton(
               onPressed: () {
-                showAppointmentDialog(context);
+                showAppointmentDialog(context, selectedDay: calendarSelectedDate);
               },
               child: const Icon(Icons.add),
             )
