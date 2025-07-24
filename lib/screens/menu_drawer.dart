@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stylist_notebook/screens/clients_screen.dart';
+import 'package:stylist_notebook/screens/settings_screen.dart';
 import 'package:stylist_notebook/screens/statistics_screen.dart';
 import 'main_screen.dart';
 import 'recipes_screen.dart';
@@ -228,6 +229,38 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(builder: (context) => const StatisticsScreen()),
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: _slideAnimation.value,
+                child: Opacity(
+                  opacity: _fadeAnimation.value,
+                  child: ListTile(
+                    leading: const Icon(Icons.bar_chart),
+                    title: const Text('Настройки'),
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SettingsScreen(
+                            onBackupPathSelected: (path) {
+                              // Provide the logic for handling backup path selection
+                            },
+                            appointments: widget.appointments,
+                            holidays: const [], // Provide the list of holidays
+                            clients: const [], // Provide the list of clients
+                            expenses: const [], // Provide the list of expenses
+                            recipes: const [], // Provide the list of recipes
+                          ),
+                        ),
                       );
                     },
                   ),

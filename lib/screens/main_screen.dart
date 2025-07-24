@@ -428,6 +428,26 @@ class _MainScreenState extends State<MainScreen> {
             },
             eventLoader: getAppointmentsForDay,
             calendarBuilders: CalendarBuilders(
+              markerBuilder: (context, date, events) {
+                if (events.isNotEmpty) {
+                  return Positioned(
+                    right: 1,
+                    bottom: 1,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        events.length.toString(),
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                  );
+                }
+                return null;
+              },
               defaultBuilder: (context, day, focusedDay) {
                 if (holidays.any((h) => h.year == day.year && h.month == day.month && h.day == day.day)) {
                   return Container(
@@ -448,10 +468,6 @@ class _MainScreenState extends State<MainScreen> {
             ),
             calendarStyle: const CalendarStyle(
               markersAlignment: Alignment.bottomRight,
-              markerDecoration: BoxDecoration(
-                color: Colors.blue,
-                shape: BoxShape.circle,
-              ),
             ),
             headerStyle: const HeaderStyle(
               formatButtonVisible: false,
