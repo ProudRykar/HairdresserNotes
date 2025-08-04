@@ -59,7 +59,7 @@ class _MenuDrawerState extends State<MenuDrawer> with SingleTickerProviderStateM
 
     final clientCount = todayAppointments.length;
     final totalEarnings = todayAppointments.fold<double>(
-        0.0, (sum, appointment) => sum + appointment.earnings);
+        0.0, (sum, appointment) => sum + appointment.earnings + appointment.tips);
 
     return {
       'clientCount': clientCount,

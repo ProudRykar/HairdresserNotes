@@ -191,19 +191,35 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _showEarningsDialog(BuildContext context, Appointment appointment, int index) {
-    TextEditingController earningsController = TextEditingController();
+    TextEditingController earningsController = TextEditingController(text: appointment.earnings > 0 ? appointment.earnings.toStringAsFixed(0) : '');
+    TextEditingController tipsController = TextEditingController(text: appointment.tips > 0 ? appointment.tips.toStringAsFixed(0) : '');
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Добавить заработок'),
-          content: TextField(
-            controller: earningsController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              hintText: 'Введите сумму (₽)',
-            ),
+          title: const Text('Добавить заработок и чаевые'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: earningsController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  hintText: 'Введите сумму заработка (₽)',
+                  labelText: 'Заработок',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: tipsController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  hintText: 'Введите сумму чаевых (₽)',
+                  labelText: 'Чаевые',
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -214,20 +230,23 @@ class _MainScreenState extends State<MainScreen> {
             ),
             TextButton(
               onPressed: () {
-                final input = earningsController.text.replaceAll(',', '.');
-                final earnings = double.tryParse(input) ?? 0.0;
-                if (earnings >= 0) {
+                final earningsInput = earningsController.text.replaceAll(',', '.');
+                final tipsInput = tipsController.text.replaceAll(',', '.');
+                final earnings = double.tryParse(earningsInput) ?? 0.0;
+                final tips = double.tryParse(tipsInput) ?? 0.0;
+                if (earnings >= 0 && tips >= 0) {
                   final updatedAppointment = Appointment(
                     name: appointment.name,
                     service: appointment.service,
                     dateTime: appointment.dateTime,
                     earnings: earnings,
+                    tips: tips,
                   );
                   updateAppointment(index, updatedAppointment);
                   Navigator.pop(context);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Введите корректную сумму')),
+                    const SnackBar(content: Text('Введите корректные суммы')),
                   );
                 }
               },
@@ -271,15 +290,28 @@ class _MainScreenState extends State<MainScreen> {
                         controller: serviceController,
                         decoration: const InputDecoration(hintText: 'Введите услугу'),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 10),
                       SizedBox(
                         height: 400,
                         child: TableCalendar(
+                          rowHeight: 40,
+                          daysOfWeekHeight: 50,
                           locale: 'ru_RU',
                           firstDay: DateTime(2025),
                           lastDay: DateTime(2100),
                           focusedDay: selectedDate!,
                           currentDay: selectedDate,
+
+                          calendarFormat: CalendarFormat.month,
+                          availableCalendarFormats: const {
+                            CalendarFormat.month: '',
+                          },
+
+                          headerStyle: const HeaderStyle(
+                            formatButtonVisible: false,
+                            titleCentered: true,
+                          ),
+
                           selectedDayPredicate: (day) => isSameDay(selectedDate, day),
                           onDaySelected: (selectedDay, focusedDay) {
                             setDialogState(() {
@@ -310,7 +342,7 @@ class _MainScreenState extends State<MainScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 10),
                       SizedBox(
                         height: 100,
                         child: CupertinoDatePicker(
@@ -372,6 +404,7 @@ class _MainScreenState extends State<MainScreen> {
                                   service: serviceController.text,
                                   dateTime: newDateTime,
                                   earnings: appointment?.earnings ?? 0.0,
+                                  tips: appointment?.tips ?? 0.0,
                                 );
                                 if (appointment == null) {
                                   addAppointment(newAppointment);
@@ -416,7 +449,7 @@ class _MainScreenState extends State<MainScreen> {
             lastDay: DateTime(2100),
             focusedDay: focusedDate,
             selectedDayPredicate: (day) => isSameDay(calendarSelectedDate, day),
-            startingDayOfWeek: StartingDayOfWeek.monday, // Week starts from Monday
+            startingDayOfWeek: StartingDayOfWeek.monday,
             onDaySelected: (selectedDay, focusedDay) {
               setState(() {
                 calendarSelectedDate = selectedDay;
@@ -522,6 +555,11 @@ class _MainScreenState extends State<MainScreen> {
                                                 Text(
                                                   'Заработано: ${appointment.earnings.toStringAsFixed(0)} ₽',
                                                   style: const TextStyle(color: Colors.green),
+                                                ),
+                                              if (appointment.tips > 0)
+                                                Text(
+                                                  'Чаевые: ${appointment.tips.toStringAsFixed(0)} ₽',
+                                                  style: const TextStyle(color: Colors.blue),
                                                 ),
                                             ],
                                           ),

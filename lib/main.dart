@@ -11,6 +11,7 @@ final themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.light);
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await migrateClientsJson();
+  await migrateAppointmentsJson();
   await initializeDateFormatting('ru', null);
   runApp(const HairdresserApp());
 }

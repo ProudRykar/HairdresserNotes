@@ -165,7 +165,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       }
       statsMap[monthKey] = MonthlyStats(
         month: statsMap[monthKey]!.month,
-        earnings: statsMap[monthKey]!.earnings + appointment.earnings,
+        earnings: statsMap[monthKey]!.earnings + appointment.earnings + appointment.tips,
         expenses: statsMap[monthKey]!.expenses,
         clientCount: statsMap[monthKey]!._clientCount + 1,
       );
@@ -422,7 +422,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     textAlign: TextAlign.center,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height:  12),
                 if (isNarrow)
                   Column(
                     children: [
