@@ -6,8 +6,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'menu_drawer.dart';
 import 'appointment.dart';
+import 'package:flutter_calendar_carousel/flutter_calendar_carousel.dart' show CalendarCarousel, EventList;
+import 'package:flutter_calendar_carousel/classes/event.dart' show Event;
+
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -196,6 +198,7 @@ class _MainScreenState extends State<MainScreen> {
 
     showDialog(
       context: context,
+      
       builder: (context) {
         return AlertDialog(
           title: const Text('Добавить заработок и чаевые'),
@@ -292,54 +295,43 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                       const SizedBox(height: 10),
                       SizedBox(
-                        height: 400,
-                        child: TableCalendar(
-                          rowHeight: 40,
-                          daysOfWeekHeight: 50,
-                          locale: 'ru_RU',
-                          firstDay: DateTime(2025),
-                          lastDay: DateTime(2100),
-                          focusedDay: selectedDate!,
-                          currentDay: selectedDate,
-
-                          calendarFormat: CalendarFormat.month,
-                          availableCalendarFormats: const {
-                            CalendarFormat.month: '',
-                          },
-
-                          headerStyle: const HeaderStyle(
-                            formatButtonVisible: false,
-                            titleCentered: true,
-                          ),
-
-                          selectedDayPredicate: (day) => isSameDay(selectedDate, day),
-                          onDaySelected: (selectedDay, focusedDay) {
+                        height: MediaQuery.of(context).size.height * 0.4, // 40% высоты экрана
+                        child: CalendarCarousel(
+                          locale: 'ru',
+                          weekendTextStyle: const TextStyle(color: Colors.red),
+                          weekdayTextStyle: const TextStyle(color: Colors.black),
+                          selectedDateTime: selectedDate!,
+                          onDayPressed: (DateTime date, List events) {
                             setDialogState(() {
-                              selectedDate = selectedDay;
+                              selectedDate = date;
                             });
                           },
-                          calendarBuilders: CalendarBuilders(
-                            defaultBuilder: (context, day, focusedDay) {
-                              if (holidays.any((h) =>
-                                  h.year == day.year &&
-                                  h.month == day.month &&
-                                  h.day == day.day)) {
-                                return Container(
-                                  margin: const EdgeInsets.all(4.0),
-                                  alignment: Alignment.center,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Text(
-                                    day.day.toString(),
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                );
-                              }
-                              return null;
+                          markedDatesMap: EventList<Event>(
+                            events: {
+                              for (var h in holidays)
+                                DateTime(h.year, h.month, h.day): [
+                                  Event(
+                                    date: DateTime(h.year, h.month, h.day),
+                                    title: 'Выходной',
+                                    icon: const Icon(Icons.block, size: 30.0, color: Colors.red), // Use 'icon' instead of 'dot'                              
+                                    ),
+                                ]
                             },
                           ),
+                          markedDateShowIcon: true,
+                          markedDateIconBuilder: (Event event) => event.icon ?? Container(), // Use 'icon' property
+                          daysHaveCircularBorder: true,
+                          selectedDayButtonColor: Colors.blue,
+                          todayButtonColor: Colors.greenAccent,
+                          todayBorderColor: Colors.transparent,
+                          thisMonthDayBorderColor: const Color.fromARGB(255, 255, 255, 255),
+                          customGridViewPhysics: const BouncingScrollPhysics(),
+                          weekFormat: false,
+                          height: 400,
+                          showIconBehindDayText: false,
+                          markedDateMoreShowTotal: false,
+                          selectedDayTextStyle: const TextStyle(color: Colors.white),
+                          markedDateCustomTextStyle: const TextStyle(color: Colors.red),
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -440,7 +432,6 @@ class _MainScreenState extends State<MainScreen> {
         title: const Text('Записи'),
         backgroundColor: const Color.fromARGB(176, 94, 94, 253),
       ),
-      drawer: MenuDrawer(appointments: appointments),
       body: Column(
         children: [
           TableCalendar(

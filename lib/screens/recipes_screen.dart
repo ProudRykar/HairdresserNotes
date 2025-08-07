@@ -5,7 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-import 'menu_drawer.dart';
 
 class RecipeEntry {
   final DateTime date;
@@ -373,7 +372,6 @@ class _RecipesScreenState extends State<RecipesScreen> {
         title: const Text('Рецепты'),
         backgroundColor: const Color.fromARGB(176, 94, 94, 253),
       ),
-      drawer: const MenuDrawer(appointments: []),
       body: Column(
         children: [
           Padding(

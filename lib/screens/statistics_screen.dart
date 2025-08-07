@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
-import 'menu_drawer.dart';
 import 'appointment.dart';
 
 class Expense {
@@ -694,7 +693,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         backgroundColor: const Color.fromARGB(176, 94, 94, 253),
         elevation: 0,
       ),
-      drawer: MenuDrawer(appointments: appointments),
       body: monthlyStats.isEmpty
           ? const Center(child: Text('Нет данных для отображения'))
           : Column(

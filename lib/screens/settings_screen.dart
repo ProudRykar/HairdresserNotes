@@ -5,7 +5,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as path;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stylist_notebook/screens/client.dart';
-import 'package:stylist_notebook/screens/menu_drawer.dart';
 import 'package:stylist_notebook/screens/recipe.dart';
 import 'package:stylist_notebook/screens/statistics_screen.dart';
 
@@ -105,7 +104,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: const Text('Настройки'),
         backgroundColor: const Color.fromARGB(176, 94, 94, 253),
       ),
-      drawer: MenuDrawer(appointments: widget.appointments),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

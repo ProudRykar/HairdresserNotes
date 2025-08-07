@@ -4,7 +4,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:stylist_notebook/migration/migration_service.dart';
-import 'screens/main_screen.dart';
+import 'package:stylist_notebook/screens/ui/main_scaffold.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'screens/appointment.dart';
+
+Future<List<Appointment>> loadAppointments() async {
+  final directory = await getApplicationDocumentsDirectory();
+  final file = File('${directory.path}/appointments.json');
+  if (await file.exists()) {
+    final contents = await file.readAsString();
+    final List<dynamic> data = jsonDecode(contents);
+    return data.map((e) => Appointment.fromJson(e)).toList();
+  }
+  return [];
+}
 
 final themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.light);
 
@@ -13,15 +28,21 @@ void main() async {
   await migrateClientsJson();
   await migrateAppointmentsJson();
   await initializeDateFormatting('ru', null);
-  runApp(const HairdresserApp());
+  
+  final appointments = await loadAppointments(); // <-- добавим эту функцию ниже
+
+  runApp(HairdresserApp(appointments: appointments));
 }
 
 class HairdresserApp extends StatefulWidget {
-  const HairdresserApp({super.key});
+  final List<Appointment> appointments;
+
+  const HairdresserApp({super.key, required this.appointments});
 
   @override
   State<HairdresserApp> createState() => _HairdresserAppState();
 }
+
 
 final ThemeData lightTheme = ThemeData(
   brightness: Brightness.light,
@@ -87,7 +108,18 @@ class _HairdresserAppState extends State<HairdresserApp> {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          home: const MainScreen(),
+          home: FutureBuilder<List<Appointment>>(
+            future: loadAppointments(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return const Center(child: Text('Ошибка загрузки'));
+              } else {
+                return MainScaffold(appointments: snapshot.data ?? []);
+              }
+            },
+          ),
         );
       },
     );

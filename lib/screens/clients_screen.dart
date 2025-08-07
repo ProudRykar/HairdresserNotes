@@ -5,7 +5,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'menu_drawer.dart';
 import 'appointment.dart';
 import 'client.dart';
 
@@ -213,7 +212,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
         title: const Text('Клиенты'),
         backgroundColor: const Color.fromARGB(176, 94, 94, 253),
       ),
-      drawer: MenuDrawer(appointments: appointments),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
