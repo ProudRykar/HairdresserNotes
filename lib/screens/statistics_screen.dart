@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
-import 'appointment.dart';
+import '../models/appointment.dart';
 
 class Expense {
   final DateTime date;
@@ -688,11 +688,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     final dateFormat = DateFormat('LLLL yyyy', 'ru');
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Статистика'),
-        backgroundColor: const Color.fromARGB(176, 94, 94, 253),
-        elevation: 0,
-      ),
       body: monthlyStats.isEmpty
           ? const Center(child: Text('Нет данных для отображения'))
           : Column(

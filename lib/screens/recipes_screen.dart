@@ -368,10 +368,6 @@ class _RecipesScreenState extends State<RecipesScreen> {
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('dd.MM.yyyy', 'ru');
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Рецепты'),
-        backgroundColor: const Color.fromARGB(176, 94, 94, 253),
-      ),
       body: Column(
         children: [
           Padding(

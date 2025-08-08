@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:stylist_notebook/migration/migration_service.dart';
-import 'package:stylist_notebook/screens/ui/main_scaffold.dart';
+import 'package:stylist_notebook/ui/main_scaffold.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'screens/appointment.dart';
+import 'models/appointment.dart';
 
 Future<List<Appointment>> loadAppointments() async {
   final directory = await getApplicationDocumentsDirectory();
@@ -29,8 +29,8 @@ void main() async {
   await migrateAppointmentsJson();
   await initializeDateFormatting('ru', null);
   
-  final appointments = await loadAppointments(); // <-- добавим эту функцию ниже
-
+  final appointments = await loadAppointments();
+  
   runApp(HairdresserApp(appointments: appointments));
 }
 

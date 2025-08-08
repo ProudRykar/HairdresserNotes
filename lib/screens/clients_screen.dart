@@ -5,8 +5,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'appointment.dart';
-import 'client.dart';
+import '../models/appointment.dart';
+import '../models/client.dart';
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -208,10 +208,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
     final phone = _selectedClient != null ? _getClientPhone(_selectedClient!) : null;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Клиенты'),
-        backgroundColor: const Color.fromARGB(176, 94, 94, 253),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

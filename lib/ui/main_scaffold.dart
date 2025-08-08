@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:stylist_notebook/screens/clients_screen.dart';
 import 'package:stylist_notebook/screens/settings_screen.dart';
 import 'package:stylist_notebook/screens/statistics_screen.dart';
-import '../recipes_screen.dart';
-import '../main_screen.dart';
-import '../appointment.dart';
+import '../screens/recipes_screen.dart';
+import '../screens/main_screen.dart';
+import '../models/appointment.dart';
 
 class MainScaffold extends StatefulWidget {
   final List<Appointment> appointments;

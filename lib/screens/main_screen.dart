@@ -6,10 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'appointment.dart';
-import 'package:flutter_calendar_carousel/flutter_calendar_carousel.dart' show CalendarCarousel, EventList;
-import 'package:flutter_calendar_carousel/classes/event.dart' show Event;
-
+import '../models/appointment.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -198,7 +195,6 @@ class _MainScreenState extends State<MainScreen> {
 
     showDialog(
       context: context,
-      
       builder: (context) {
         return AlertDialog(
           title: const Text('Добавить заработок и чаевые'),
@@ -261,6 +257,95 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  Future<void> _showCalendarDialog(BuildContext context, Function(DateTime) onDateSelected) async {
+    DateTime? tempSelectedDate = selectedDate ?? DateTime.now();
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Выберите дату'),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 400,
+            child: TableCalendar(
+              locale: 'ru_RU',
+              firstDay: DateTime(2025),
+              lastDay: DateTime(2100),
+              focusedDay: tempSelectedDate!,
+              selectedDayPredicate: (day) => isSameDay(tempSelectedDate, day),
+              startingDayOfWeek: StartingDayOfWeek.monday,
+              onDaySelected: (selectedDay, focusedDay) {
+                tempSelectedDate = selectedDay;
+              },
+              eventLoader: getAppointmentsForDay,
+              calendarBuilders: CalendarBuilders(
+                markerBuilder: (context, date, events) {
+                  if (events.isNotEmpty) {
+                    return Positioned(
+                      right: 1,
+                      bottom: 1,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          color: Colors.blue,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          events.length.toString(),
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ),
+                    );
+                  }
+                  return null;
+                },
+                defaultBuilder: (context, day, focusedDay) {
+                  if (holidays.any((h) => h.year == day.year && h.month == day.month && h.day == day.day)) {
+                    return Container(
+                      margin: const EdgeInsets.all(4.0),
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        day.day.toString(),
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    );
+                  }
+                  return null;
+                },
+              ),
+              calendarStyle: const CalendarStyle(
+                markersAlignment: Alignment.bottomRight,
+              ),
+              headerStyle: const HeaderStyle(
+                formatButtonVisible: false,
+                titleCentered: true,
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Отмена'),
+            ),
+            TextButton(
+              onPressed: () {
+                onDateSelected(tempSelectedDate!);
+                Navigator.pop(context);
+              },
+              child: const Text('Выбрать'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void showAppointmentDialog(BuildContext context, {Appointment? appointment, int? index, DateTime? selectedDay}) {
     TextEditingController nameController = TextEditingController(text: appointment?.name ?? '');
     TextEditingController serviceController = TextEditingController(text: appointment?.service ?? '');
@@ -294,44 +379,30 @@ class _MainScreenState extends State<MainScreen> {
                         decoration: const InputDecoration(hintText: 'Введите услугу'),
                       ),
                       const SizedBox(height: 10),
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.4, // 40% высоты экрана
-                        child: CalendarCarousel(
-                          locale: 'ru',
-                          weekendTextStyle: const TextStyle(color: Colors.red),
-                          weekdayTextStyle: const TextStyle(color: Colors.black),
-                          selectedDateTime: selectedDate!,
-                          onDayPressed: (DateTime date, List events) {
+                      InkWell(
+                        onTap: () {
+                          _showCalendarDialog(context, (selected) {
                             setDialogState(() {
-                              selectedDate = date;
+                              selectedDate = selected;
                             });
-                          },
-                          markedDatesMap: EventList<Event>(
-                            events: {
-                              for (var h in holidays)
-                                DateTime(h.year, h.month, h.day): [
-                                  Event(
-                                    date: DateTime(h.year, h.month, h.day),
-                                    title: 'Выходной',
-                                    icon: const Icon(Icons.block, size: 30.0, color: Colors.red), // Use 'icon' instead of 'dot'                              
-                                    ),
-                                ]
-                            },
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(4),
                           ),
-                          markedDateShowIcon: true,
-                          markedDateIconBuilder: (Event event) => event.icon ?? Container(), // Use 'icon' property
-                          daysHaveCircularBorder: true,
-                          selectedDayButtonColor: Colors.blue,
-                          todayButtonColor: Colors.greenAccent,
-                          todayBorderColor: Colors.transparent,
-                          thisMonthDayBorderColor: const Color.fromARGB(255, 255, 255, 255),
-                          customGridViewPhysics: const BouncingScrollPhysics(),
-                          weekFormat: false,
-                          height: 400,
-                          showIconBehindDayText: false,
-                          markedDateMoreShowTotal: false,
-                          selectedDayTextStyle: const TextStyle(color: Colors.white),
-                          markedDateCustomTextStyle: const TextStyle(color: Colors.red),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                formatSelectedDate(selectedDate),
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              const Icon(Icons.calendar_today, size: 20),
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -428,10 +499,6 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Записи'),
-        backgroundColor: const Color.fromARGB(176, 94, 94, 253),
-      ),
       body: Column(
         children: [
           TableCalendar(

@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as path;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:stylist_notebook/screens/client.dart';
-import 'package:stylist_notebook/screens/recipe.dart';
+import 'package:stylist_notebook/models/client.dart';
+import 'package:stylist_notebook/models/recipe.dart';
 import 'package:stylist_notebook/screens/statistics_screen.dart';
 
-import 'appointment.dart';
+import '../models/appointment.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Function(String) onBackupPathSelected;
@@ -100,10 +100,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Настройки'),
-        backgroundColor: const Color.fromARGB(176, 94, 94, 253),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
