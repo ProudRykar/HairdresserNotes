@@ -7,6 +7,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import '../models/appointment.dart';
+import '../theme/theme.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -286,8 +287,8 @@ class _MainScreenState extends State<MainScreen> {
                       bottom: 1,
                       child: Container(
                         padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          color: Colors.blue,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).appBarTheme.backgroundColor,
                           shape: BoxShape.circle,
                         ),
                         child: Text(
@@ -317,8 +318,17 @@ class _MainScreenState extends State<MainScreen> {
                   return null;
                 },
               ),
-              calendarStyle: const CalendarStyle(
+              calendarStyle: CalendarStyle(
                 markersAlignment: Alignment.bottomRight,
+                  markerDecoration: const BoxDecoration(color: Colors.transparent),
+                selectedDecoration: BoxDecoration(
+                  color: Theme.of(context).appBarTheme.backgroundColor,
+                  shape: BoxShape.circle,
+                ),
+                todayDecoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.secondary, // цвет для сегодняшнего дня
+                  shape: BoxShape.circle,
+                ),
               ),
               headerStyle: const HeaderStyle(
                 formatButtonVisible: false,
@@ -526,8 +536,8 @@ class _MainScreenState extends State<MainScreen> {
                     bottom: 1,
                     child: Container(
                       padding: const EdgeInsets.all(2),
-                      decoration: const BoxDecoration(
-                        color: Colors.blue,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).appBarTheme.backgroundColor,
                         shape: BoxShape.circle,
                       ),
                       child: Text(
@@ -557,8 +567,16 @@ class _MainScreenState extends State<MainScreen> {
                 return null;
               },
             ),
-            calendarStyle: const CalendarStyle(
+            calendarStyle: CalendarStyle(
               markersAlignment: Alignment.bottomRight,
+              selectedDecoration: BoxDecoration(
+                color: Theme.of(context).appBarTheme.backgroundColor,
+                shape: BoxShape.circle,
+              ),
+              todayDecoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.secondary, // цвет для сегодняшнего дня
+                shape: BoxShape.circle,
+              ),
             ),
             headerStyle: const HeaderStyle(
               formatButtonVisible: false,
@@ -624,7 +642,7 @@ class _MainScreenState extends State<MainScreen> {
                                         ),
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.add_circle, color: Colors.blue),
+                                        icon: Icon(Icons.add_circle, color: Theme.of(context).appBarTheme.backgroundColor,),
                                         onPressed: () {
                                           _showEarningsDialog(context, appointment, appointments.indexOf(appointment));
                                         },
@@ -647,6 +665,8 @@ class _MainScreenState extends State<MainScreen> {
               onPressed: () {
                 showAppointmentDialog(context, selectedDay: calendarSelectedDate);
               },
+              backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+              foregroundColor: AppColors.white,
               child: const Icon(Icons.add),
             )
           : null,

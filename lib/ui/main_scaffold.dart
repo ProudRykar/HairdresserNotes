@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stylist_notebook/screens/clients_screen.dart';
-import 'package:stylist_notebook/screens/settings_screen.dart';
+import 'package:stylist_notebook/screens/settings/settings_screen.dart';
 import 'package:stylist_notebook/screens/statistics_screen.dart';
 import '../screens/recipes_screen.dart';
 import '../screens/main_screen.dart';
@@ -56,14 +56,37 @@ class _MainScaffoldState extends State<MainScaffold> {
         ),
       ];
 
+  List<String> get _screenTitles => [
+        'Рецепты',
+        'Клиенты',
+        'Записи',
+        'Статистика',
+        'Настройки',
+      ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
+      appBar: AppBar(
+        toolbarHeight: 50,
+        title: Text(
+          _screenTitles[_currentIndex],
+        ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: _screens[_currentIndex],
+          ),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
         type: BottomNavigationBarType.fixed,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        selectedItemColor: Theme.of(context).appBarTheme.foregroundColor,
+        unselectedItemColor: Theme.of(context).appBarTheme.foregroundColor?.withOpacity(0.6),
         items: _navBarItems,
       ),
     );

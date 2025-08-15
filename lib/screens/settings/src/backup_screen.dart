@@ -4,13 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as path;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stylist_notebook/models/appointment.dart';
 import 'package:stylist_notebook/models/client.dart';
+import 'package:stylist_notebook/models/expense.dart';
 import 'package:stylist_notebook/models/recipe.dart';
-import 'package:stylist_notebook/screens/statistics_screen.dart';
 
-import '../models/appointment.dart';
-
-class SettingsScreen extends StatefulWidget {
+class SettingsBackupScreen extends StatefulWidget {
   final Function(String) onBackupPathSelected;
   final List<Appointment> appointments;
   final List<DateTime> holidays;
@@ -18,7 +17,7 @@ class SettingsScreen extends StatefulWidget {
   final List<Expense> expenses;
   final List<Recipe> recipes;
 
-  const SettingsScreen({
+  const SettingsBackupScreen({
     super.key,
     required this.onBackupPathSelected,
     required this.appointments,
@@ -29,10 +28,10 @@ class SettingsScreen extends StatefulWidget {
   });
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  State<SettingsBackupScreen> createState() => _SettingsBackupScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsBackupScreenState extends State<SettingsBackupScreen> {
   String? backupPath;
 
   @override
@@ -63,7 +62,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _createBackup() async {
     if (backupPath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Выберите папку для бэкапа')),
+        SnackBar(
+          content: Text(
+            'Выберите папку для бэкапа',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
       return;
     }
@@ -88,11 +93,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await recipesFile.writeAsString(jsonEncode(widget.recipes.map((e) => e.toJson()).toList()));
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Бэкап успешно создан')),
+        SnackBar(
+          content: Text(
+            'Бэкап успешно создан',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка при создании бэкапа: $e')),
+        SnackBar(
+          content: Text(
+            'Ошибка при создании бэкапа: $e',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
     }
   }
@@ -100,22 +117,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Бэкапы',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
-              title: const Text('Выберите папку для бэкапа'),
-              subtitle: Text(backupPath ?? 'Не выбрано'),
+              title: Text(
+                'Папка для бэкапа',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              subtitle: Text(
+                backupPath ?? 'Не выбрано',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
               trailing: ElevatedButton(
                 onPressed: _selectBackupFolder,
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Theme.of(context).textTheme.bodyMedium?.color,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                ),
                 child: const Text('Выбрать'),
               ),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _createBackup,
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Theme.of(context).textTheme.bodyMedium?.color,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+              ),
               child: const Text('Создать бэкап'),
             ),
           ],

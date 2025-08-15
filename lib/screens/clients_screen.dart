@@ -154,11 +154,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Номер телефона для $clientName'),
+          title: const Text('Номер телефона'),
           content: TextField(
             controller: _phoneController,
             decoration: const InputDecoration(
-              hintText: 'Введите номер телефона (например, +79991234567)',
+              hintText: 'Введите номер телефона',
             ),
             keyboardType: TextInputType.phone,
           ),

@@ -6,31 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:stylist_notebook/theme/theme.dart';
 import '../models/appointment.dart';
-
-class Expense {
-  final DateTime date;
-  final double amount;
-  final String description;
-
-  Expense({
-    required this.date,
-    required this.amount,
-    required this.description,
-  });
-
-  Map<String, dynamic> toJson() => {
-        'date': date.toIso8601String(),
-        'amount': amount,
-        'description': description,
-      };
-
-  factory Expense.fromJson(Map<String, dynamic> json) => Expense(
-        date: DateTime.parse(json['date'] as String),
-        amount: (json['amount'] is num ? (json['amount'] as num).toDouble() : 0.0),
-        description: json['description'] as String? ?? '',
-      );
-}
+import '../models/expense.dart';
 
 class MonthlyStats {
   final DateTime month;
@@ -768,7 +746,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         onPressed: () {
           _showExpenseDialog(context);
         },
-        backgroundColor: Colors.blue,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: AppColors.white,
         child: const Icon(Icons.add),
       ),
     );
