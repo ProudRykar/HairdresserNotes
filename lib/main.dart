@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'models/appointment.dart';
 import 'ui/theme_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:stylist_notebook/screens/load_screen.dart';
 
 Future<List<Appointment>> loadAppointments() async {
   final directory = await getApplicationDocumentsDirectory();
@@ -27,15 +28,11 @@ void main() async {
   await migrateAppointmentsJson();
   await initializeDateFormatting('ru', null);
 
-  final appointments = await loadAppointments();
-
-  runApp(HairdresserApp(appointments: appointments));
+  runApp(const HairdresserApp());
 }
 
 class HairdresserApp extends StatelessWidget {
-  final List<Appointment> appointments;
-
-  const HairdresserApp({super.key, required this.appointments});
+  const HairdresserApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -61,11 +58,13 @@ class HairdresserApp extends StatelessWidget {
               future: loadAppointments(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return const Center(child: Text('Ошибка загрузки'));
-              } else {
-                return MainScaffold(appointments: snapshot.data ?? []);
+                  return LoadScreen(); // Показываем заставку
+                } else if (snapshot.hasError) {
+                  return const Scaffold(
+                    body: Center(child: Text('Ошибка загрузки')),
+                  );
+                } else {
+                  return MainScaffold(appointments: snapshot.data ?? []);
                 }
               },
             ),
