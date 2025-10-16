@@ -92,7 +92,7 @@ class ThemePreview extends StatelessWidget {
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
-          currentIndex: 2, // Устанавливаем "Записи" как активную вкладку
+          currentIndex: 2,
           type: BottomNavigationBarType.fixed,
           backgroundColor: themeData.appBarTheme.backgroundColor,
           selectedItemColor: themeData.appBarTheme.foregroundColor,

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -516,17 +518,19 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               child: BarChart(
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
-                  maxY: (stat.earnings > stat.expenses ? stat.earnings : stat.expenses) * 1.2,
+                  maxY: (stat.earnings > stat.expenses ? stat.earnings : stat.expenses) * 1.3,
                   barTouchData: BarTouchData(
                     enabled: true,
                     touchTooltipData: BarTouchTooltipData(
-                      getTooltipColor: (_) => Colors.blueAccent,
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         final value = rod.toY.toStringAsFixed(0);
                         final type = rodIndex == 0 ? 'Доход' : 'Расход';
                         return BarTooltipItem(
                           '$type: $value ₽',
-                          const TextStyle(color: Colors.white),
+                          const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         );
                       },
                     ),
@@ -537,22 +541,29 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
-                          return Text(
-                            value.toInt() == 0 ? 'Доход' : 'Расход',
-                            style: const TextStyle(fontSize: 12),
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              value.toInt() == 0 ? 'Доход' : 'Расход',
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
                           );
                         },
-                        reservedSize: 30,
+                        reservedSize: 36,
                       ),
                     ),
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 40,
+                        interval: (stat.earnings > stat.expenses
+                                ? stat.earnings
+                                : stat.expenses) /
+                            5,
                         getTitlesWidget: (value, meta) {
                           return Text(
                             value.toInt().toString(),
-                            style: const TextStyle(fontSize: 12),
+                            style: const TextStyle(fontSize: 12, color: Colors.black54),
                           );
                         },
                       ),
@@ -560,28 +571,48 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
-                  gridData: const FlGridData(show: false),
+                  gridData: const FlGridData(show: true, horizontalInterval: 5000, drawVerticalLine: false),
                   borderData: FlBorderData(show: false),
                   barGroups: [
                     BarChartGroupData(
                       x: 0,
+                      barsSpace: 6,
                       barRods: [
                         BarChartRodData(
                           toY: stat.earnings,
-                          color: Colors.green,
-                          width: 20,
-                          borderRadius: BorderRadius.circular(4),
+                          width: 24,
+                          borderRadius: BorderRadius.circular(6),
+                          gradient: const LinearGradient(
+                            colors: [Colors.green, Colors.lightGreenAccent],
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                          ),
+                          backDrawRodData: BackgroundBarChartRodData(
+                            show: true,
+                            toY: (stat.earnings > stat.expenses ? stat.earnings : stat.expenses) * 1.3,
+                            color: Colors.grey.withOpacity(0.2),
+                          ),
                         ),
                         BarChartRodData(
                           toY: stat.expenses,
-                          color: Colors.red,
-                          width: 20,
-                          borderRadius: BorderRadius.circular(4),
+                          width: 24,
+                          borderRadius: BorderRadius.circular(6),
+                          gradient: const LinearGradient(
+                            colors: [Colors.red, Colors.redAccent],
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                          ),
+                          backDrawRodData: BackgroundBarChartRodData(
+                            show: true,
+                            toY: (stat.earnings > stat.expenses ? stat.earnings : stat.expenses) * 1.3,
+                            color: Colors.grey.withOpacity(0.2),
+                          ),
                         ),
                       ],
                     ),
                   ],
                 ),
+                swapAnimationDuration: const Duration(milliseconds: 700),
               ),
             ),
           ],
@@ -589,6 +620,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       ),
     );
   }
+
 
   Widget _buildExpensesList(MonthlyStats stat) {
     final dateFormat = DateFormat('LLLL yyyy', 'ru');
